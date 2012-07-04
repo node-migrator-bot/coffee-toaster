@@ -38,16 +38,17 @@ vows.describe('Generators (-n, -i)')
 
 			toaster.stderr.on 'data', (data)=>
 				console.log data.toString()
-				@callback null, null
+				@callback data
 
 			toaster.on 'exit', (code)=>
 				model = snapshot "#{__dirname}/templates/new_default_project"
 				created = snapshot "#{__dirname}/tmp/new_default_project"
-				@callback model, created
+				@callback null, model, created
 
 			undefined
 
-		'should match the default template':( model, created )->
+		'should match the default template':( err, model, created )->
+			assert.equal err, null
 			assert.isObject model
 			assert.isObject created
 			for alias, contents of model
@@ -79,16 +80,17 @@ vows.describe('Generators (-n, -i)')
 
 			toaster.stderr.on 'data', (data)->
 				console.log data.toString()
-				@callback null, null
+				@callback data
 
 			toaster.on 'exit', (code)=>
 				model = snapshot "#{__dirname}/templates/new_custom_project"
 				created = snapshot "#{__dirname}/tmp/new_custom_project"
-				@callback model, created
+				@callback null, model, created
 
 			undefined
 
-		'should match the custom template':( model, created )->
+		'should match the custom template':( err, model, created )->
+			assert.equal err, null
 			assert.isObject model
 			assert.isObject created
 			for alias, contents of model
@@ -125,16 +127,17 @@ vows.describe('Generators (-n, -i)')
 
 		toaster.stderr.on 'data', (data)=>
 			console.log data.toString()
-			@callback null, null
+			@callback data
 
 		toaster.on 'exit', (code)=>
 			model = fs.readFileSync template, "utf-8"
 			created = fs.readFileSync created, "utf-8"
-			@callback model, created
+			@callback null, model, created
 
 		undefined
 
-	'should match the \'toaster.coffe\' template':( model, created )->
+	'should match the \'toaster.coffe\' template':( err, model, created )->
+		assert.equal err, null
 		assert.equal true, true
 
 ).export module

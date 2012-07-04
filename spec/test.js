@@ -1,5 +1,5 @@
 (function() {
-  var FsUtil, assert, fs, path, snapshot, spawn, spawn_toaster, vows;
+  var FsUtil, assert, error_message, events, fs, path, snapshot, spawn, spawn_toaster, vows;
 
   fs = require("fs");
 
@@ -32,10 +32,54 @@
   };
 
   spawn_toaster = function(args, options) {
-    return spawn(__dirname + '/../bin/toaster', args, options || {
+    options = options || {
       cwd: __dirname
-    });
+    };
+    return spawn(__dirname + '/../bin/toaster', args, options);
   };
+
+  fs = require('fs');
+
+  path = require('path');
+
+  events = require("events");
+
+  vows = require("vows");
+
+  assert = require("assert");
+
+  FsUtil = (require(__dirname + "/../lib/toaster")).toaster.utils.FsUtil;
+
+  error_message = "ERROR Parse error on line 12: Unexpected 'UNARY' at file: app.coffee";
+
+  vows.describe('Compiling').addBatch({
+    'Compiling a project': {
+      'that has syntax error on file "app.js" at line 12': {
+        topic: function() {
+          var report_msg, toaster,
+            _this = this;
+          report_msg = null;
+          toaster = spawn_toaster(['-c', 'templates/error_with_line_number']);
+          toaster.stdout.on('data', function(data) {
+            if (report_msg == null) {
+              return report_msg = data.toString().stripColors.replace(/\n/g, "");
+            }
+          });
+          toaster.stderr.on('data', function(error) {
+            return this.callback(error);
+          });
+          toaster.on('exit', function(data) {
+            return _this.callback(null, report_msg);
+          });
+          return void 0;
+        },
+        'should report the error precisely': function(err, reported_msg) {
+          assert.equal(err, null);
+          return assert.equal(reported_msg, error_message);
+        }
+      }
+    }
+  })["export"](module);
 
   fs = require('fs');
 
@@ -70,18 +114,19 @@
           });
           toaster.stderr.on('data', function(data) {
             console.log(data.toString());
-            return _this.callback(null, null);
+            return _this.callback(data);
           });
           toaster.on('exit', function(code) {
             var created, model;
             model = snapshot("" + __dirname + "/templates/new_default_project");
             created = snapshot("" + __dirname + "/tmp/new_default_project");
-            return _this.callback(model, created);
+            return _this.callback(null, model, created);
           });
           return void 0;
         },
-        'should match the default template': function(model, created) {
+        'should match the default template': function(err, model, created) {
           var a, alias, b, contents, _results;
+          assert.equal(err, null);
           assert.isObject(model);
           assert.isObject(created);
           _results = [];
@@ -115,18 +160,19 @@
           });
           toaster.stderr.on('data', function(data) {
             console.log(data.toString());
-            return this.callback(null, null);
+            return this.callback(data);
           });
           toaster.on('exit', function(code) {
             var created, model;
             model = snapshot("" + __dirname + "/templates/new_custom_project");
             created = snapshot("" + __dirname + "/tmp/new_custom_project");
-            return _this.callback(model, created);
+            return _this.callback(null, model, created);
           });
           return void 0;
         },
-        'should match the custom template': function(model, created) {
+        'should match the custom template': function(err, model, created) {
           var a, alias, b, contents, _results;
+          assert.equal(err, null);
           assert.isObject(model);
           assert.isObject(created);
           _results = [];
@@ -166,40 +212,19 @@
         });
         toaster.stderr.on('data', function(data) {
           console.log(data.toString());
-          return _this.callback(null, null);
+          return _this.callback(data);
         });
         toaster.on('exit', function(code) {
           var model;
           model = fs.readFileSync(template, "utf-8");
           created = fs.readFileSync(created, "utf-8");
-          return _this.callback(model, created);
+          return _this.callback(null, model, created);
         });
         return void 0;
       },
-      'should match the \'toaster.coffe\' template': function(model, created) {
+      'should match the \'toaster.coffe\' template': function(err, model, created) {
+        assert.equal(err, null);
         return assert.equal(true, true);
-      }
-    }
-  })["export"](module);
-
-  fs = require('fs');
-
-  path = require('path');
-
-  vows = require("vows");
-
-  assert = require("assert");
-
-  FsUtil = (require(__dirname + "/../lib/toaster")).toaster.utils.FsUtil;
-
-  vows.describe('Builder').addBatch({
-    'A project builded': {
-      'with a syntax error on file "app.js" line 1': {
-        topic: 'on file at line 1',
-        'should alert against the file "app.js" at line 1': function(msg) {
-          console.log("asserting " + msg);
-          return assert.equal(msg, "on file at line 1");
-        }
       }
     }
   })["export"](module);

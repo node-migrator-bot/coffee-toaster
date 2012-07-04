@@ -20,4 +20,5 @@ snapshot = ( folderpath, buffer = {} )->
 	return buffer
 
 spawn_toaster = (args, options) ->
-	spawn __dirname + '/../bin/toaster', args, options || {cwd: __dirname}
+	options = options || {cwd: __dirname }
+	spawn __dirname + '/../bin/toaster', args, options
